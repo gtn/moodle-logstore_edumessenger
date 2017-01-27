@@ -39,6 +39,7 @@ class graylog
     private $config;
     private $buffer = array();
     private $ready;
+	private $data = [];
 
     /**
      * Constructor.
@@ -56,8 +57,31 @@ class graylog
      * Setup the connection.
      */
     private function setup() {
+    	global $CFG;
+
         require_once(dirname(__FILE__) . '/../vendor/autoload.php');
         $this->config = get_config('logstore_graylog');
+
+		$this->data = (object)[
+			'act' => 'log',
+			'host' => $CFG->wwwroot,
+			'ctoken' => '[admin token]',
+			'active' => '[checkbox “Dienst aktiv setzen”]',
+			'title' => '[Name of Site]',
+			'contact' => '[Email Kontakt]',
+			'etherpadurl' => '[URL to etherpad]',
+			'logo' => '[base64 encoded logo]',
+			'description' => '[Beschreibung]',
+			'allow_registration' => '[Checkbox “Erlaube Registrierung”]',
+			'allow_course_creation' => '[Checkbox “Erlaube Management von …”]',
+			'base_category' => '[“Kursbereich für eduMessenger-Gruppen”]',
+			'base_course' => '[“Vorlagekurs für eduMessenger-Gruppen”]',
+			'actions' => [],
+		];
+
+		// testing
+		return true;
+
         $hostnameavailable = isset($this->config->hostname);
         $portavailable = isset($this->config->port);
         if (!$hostnameavailable or !$portavailable) {
@@ -143,7 +167,38 @@ class graylog
      * @param $data
      */
     public static function log_standardentry($data) {
-        $data = (array)$data;
+    	global $DB;
+
+        $data = (object)$data;
+
+		if (is_string($data->other)) {
+			$tmp = unserialize($data->other);
+			if ($tmp !== false) {
+				$data->other = $tmp;
+			}
+		}
+
+		$data->other = (object)$data->other;
+
+		// var_dump($data);
+
+		if (!in_array($data->eventname, [
+			'\mod_forum\event\discussion_created', // forum erstellt
+		])) {
+			return;
+		}
+
+		$data->coursename = $DB->get_field('course', 'fullname', ['id' => $data->courseid]);
+
+		if ($data->eventname == '\mod_forum\event\discussion_created') {
+			$data->other->developer_infos = 'forumid bezieht sich auf die moodle forum aktivität und nicht auf den beitrag im forum
+				discussionid = objectid';
+			$data->other->forumname = $DB->get_field('forum', 'name', ['id' => $data->other->forumid]);
+			$data->other->discussionid = $data->objectid;
+			$data->other->discussionname = $DB->get_field('forum_discussions', 'name', ['id' => $data->objectid]);
+		}
+
+		/*
         $newrow = new \stdClass();
         foreach ($data as $k => $v) {
             if ($k == 'other') {
@@ -157,7 +212,8 @@ class graylog
             }
             $newrow->$k = $v;
         }
-        static::log(json_encode($newrow));
+		*/
+        static::log($data);
     }
 
     /**
@@ -169,22 +225,32 @@ class graylog
             return;
         }
 
-        $publisher = new \Gelf\Publisher();
-        $publisher->addTransport($this->transport);
-        foreach ($this->buffer as $log){
-            $log = json_decode($log, true);
-            $message = new \Gelf\Message();
-            $message->setShortMessage($log['eventname']);
-            $message->setTimestamp($log['timecreated']);
-            foreach ($log as $k => $v) {
-                $message->setAdditional($k, $v);
-            }
-            try {
-                $publisher->publish($message);
-            } catch (\Exception $e) {
-                debugging('Cannot write to Graylog: ' . $e->getMessage(), DEBUG_DEVELOPER);
-            }
-        }
+		$url = 'https://www.schrenk.cc/eduMessenger/services/messenger.php';
+		// $url = 'http://localhost/moodle30/admin/tool/log/store/graylog/test.server.php';
+
+        $data = $this->data;
+		$data->actions = $this->buffer;
+
+		$ch = curl_init($url);
+
+		try {
+			# Setup request to send json via POST.
+			$payload = json_encode($data);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+			# Return response instead of printing.
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			# Send request.
+			$result = curl_exec($ch);
+			curl_close($ch);
+			# Print response.
+
+			echo "posting: ".print_r($data, true);
+			echo "<pre>$result</pre>";
+		} catch (\Exception $e) {
+			debugging('Cannot write to Graylog: ' . $e->getMessage(), DEBUG_DEVELOPER);
+		}
+
         $this->buffer = array();
     }
 }
