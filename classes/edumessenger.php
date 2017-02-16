@@ -35,7 +35,6 @@ class edumessenger {
 	private static $instance;
 	private static $debug;
 
-	private $transport;
 	private $config;
 	private $buffer = array();
 	private $ready;
@@ -87,38 +86,13 @@ class edumessenger {
 			$this->config->serverurl,
 			$dataManage
 		]));
-		if (true || $md5 !== @$this->config->last_manage_call_md5) {
+		if ($md5 !== @$this->config->last_manage_call_md5) {
 			$this->addAction($dataManage);
 			set_config('last_manage_call_md5', $md5, 'logstore_edumessenger');
 		}
 
 		// testing
 		return true;
-
-		/*
-		$hostnameavailable = isset($this->config->hostname);
-		$portavailable = isset($this->config->port);
-		if (!$hostnameavailable or !$portavailable) {
-			return false;
-		}
-		if ($this->config->transport == 'udp') {
-			$this->transport = new \Gelf\Transport\UdpTransport(
-				$this->config->hostname,
-				$this->config->port,
-				\Gelf\Transport\UdpTransport::CHUNK_SIZE_LAN
-			);
-		} elseif ($this->config->transport == 'tcp') {
-			$this->transport = new \Gelf\Transport\TcpTransport(
-				$this->config->hostname,
-				$this->config->port
-			);
-			if (isset($this->config->tcptimeout)) {
-				$this->transport->setConnectTimeout($this->config->tcptimeout);
-			}
-		}
-
-		return true;
-		*/
 	}
 
 	/**
@@ -205,20 +179,28 @@ class edumessenger {
 
 		$data->other = (object)$data->other;
 
-		// var_dump($data);
-
 		$data->coursename = $DB->get_field('course', 'fullname', ['id' => $data->courseid]);
 
-		/*
 		if ($data->eventname == '\mod_forum\event\discussion_created') {
-			$data->other->developer_infos = 'forumid bezieht sich auf die moodle forum aktivität und nicht auf den beitrag im forum
-				discussionid = objectid';
+			require_once $CFG->dirroot.'/mod/forum/externallib.php';
+
+			try {
+				$discussions = \mod_forum_external::get_forum_discussions_paginated($data->other->forumid);
+				foreach ($discussions['discussions'] as $discussion) {
+					if ($discussion->id == $data->objectid) {
+						$data->other = (object)((array)$data->other + (array)$discussion);
+						break;
+					}
+				}
+			} catch (\Exception $e) {
+				return;
+			}
+
+			//$data->other->developer_infos = 'forumid bezieht sich auf die moodle forum aktivität und nicht auf den beitrag im forum discussionid = objectid';
 			$data->other->forumname = $DB->get_field('forum', 'name', ['id' => $data->other->forumid]);
-			$data->other->discussionid = $data->objectid;
-			$data->other->discussionname = $DB->get_field('forum_discussions', 'name', ['id' => $data->objectid]);
-		} else
-		*/
-		if ($data->eventname == '\mod_forum\event\post_created') {
+			// $data->other->discussionid = $data->objectid;
+			// $data->other->discussionname = $DB->get_field('forum_discussions', 'name', ['id' => $data->objectid]);
+		} elseif ($data->eventname == '\mod_forum\event\post_created') {
 			require_once $CFG->dirroot.'/mod/forum/externallib.php';
 
 			try {
@@ -240,21 +222,6 @@ class edumessenger {
 			return;
 		}
 
-		/*
-        $newrow = new \stdClass();
-        foreach ($data as $k => $v) {
-            if ($k == 'other') {
-                $tmp = unserialize($v);
-                if ($tmp !== false) {
-                    $v = json_encode($tmp);
-                }
-            }
-            if ($k == 'id') {
-                $k = 'log_id';
-            }
-            $newrow->$k = $v;
-        }
-		*/
 		static::log($data);
 	}
 
