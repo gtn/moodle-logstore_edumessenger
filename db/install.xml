@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-  <XMLDB PATH="admin/tool/log/store/graylog/db" VERSION="20161130" COMMENT="XMLDB file for Moodle admin/tool/log/store/graylog">
+  <XMLDB PATH="admin/tool/log/store/edumessenger/db" VERSION="20161130" COMMENT="XMLDB file for Moodle admin/tool/log/store/edumessenger">
     <TABLES>
-      <TABLE NAME="logstore_graylog" COMMENT="Default comment for logstore_graylog, please edit me">
+      <TABLE NAME="logstore_edumessenger" COMMENT="Default comment for logstore_edumessenger, please edit me">
         <FIELDS>
           <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
         </FIELDS>

@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Graylog/GELF log store plugin
+ * eduMessenger log store plugin
  *
- * @package    logstore_graylog
+ * @package    logstore_edumessenger
  * @copyright  2016, Binoj David <dbinoj@gmail.com>
  * @author     Binoj David, https://www.dbinoj.com
  * @thanks     2016, Skylar Kelty <S.Kelty@kent.ac.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace logstore_graylog\task;
+namespace logstore_edumessenger\task;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -36,29 +36,29 @@ class export_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('taskexport', 'logstore_graylog');
+        return get_string('taskexport', 'logstore_edumessenger');
     }
 
     /**
-     * Export logs to Graylog.
+     * Export logs to eduMessenger.
      */
     public function execute() {
         global $DB;
 
         // Check mode.
-        $config = get_config('logstore_graylog');
+        $config = get_config('logstore_edumessenger');
         if ($config->mode == 'realtime') {
             return true;
         }
 
         // Check Splunk works.
-        $graylog = \logstore_graylog\graylog::instance();
-        if (!$graylog->is_ready()) {
+        $edumessenger = \logstore_edumessenger\edumessenger::instance();
+        if (!$edumessenger->is_ready()) {
             return false;
         }
 
         // Things may have changed.
-        $config = (object)$DB->get_records_menu('config_plugins', array('plugin' => 'logstore_graylog'), '', 'name, value');
+        $config = (object)$DB->get_records_menu('config_plugins', array('plugin' => 'logstore_edumessenger'), '', 'name, value');
 
         // Grab our last ID.
         $lastid = -1;
@@ -69,18 +69,18 @@ class export_task extends \core\task\scheduled_task {
         // Grab the recordset.
         $rs = $DB->get_recordset_select('logstore_standard_log', 'id > ?', array($lastid), 'id', '*', 0, 100000);
         foreach ($rs as $row) {
-            \logstore_graylog\graylog::log_standardentry($row);
+            \logstore_edumessenger\edumessenger::log_standardentry($row);
 
             $lastid = $row->id;
         }
         $rs->close();
 
-        // Flush Graylog.
-        $graylog->flush();
+        // Flush eduMessenger.
+        $edumessenger->flush();
 
         // Update config.
-        set_config('lastentry', $lastid, 'logstore_graylog');
-        set_config('lastrun', time(), 'logstore_graylog');
+        set_config('lastentry', $lastid, 'logstore_edumessenger');
+        set_config('lastrun', time(), 'logstore_edumessenger');
 
         return true;
     }

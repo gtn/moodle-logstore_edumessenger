@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Graylog/GELF log store plugin
+ * eduMessenger log store plugin
  *
- * @package    logstore_graylog
+ * @package    logstore_edumessenger
  * @copyright  2016, Binoj David <dbinoj@gmail.com>
  * @author     Binoj David, https://www.dbinoj.com
  * @thanks     2016, Skylar Kelty <S.Kelty@kent.ac.uk>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace logstore_graylog\log;
+namespace logstore_edumessenger\log;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -57,17 +57,17 @@ class store implements \tool_log\log\writer {
     }
 
     /**
-     * Finally send the events to Graylog.
+     * Finally send the events to eduMessenger.
      *
      * @param array $evententries raw event data
      */
     protected function insert_event_entries($evententries) {
-        $mode = get_config('logstore_graylog', 'mode');
+        $mode = get_config('logstore_edumessenger', 'mode');
         if ($mode !== 'realtime') {
             return;
         }
         foreach ($evententries as $event) {
-            \logstore_graylog\graylog::log_standardentry($event);
+            \logstore_edumessenger\edumessenger::log_standardentry($event);
         }
     }
 }

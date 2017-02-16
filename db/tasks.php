@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Graylog/GELF log store plugin
+ * eduMessenger log store plugin
  *
- * @package    logstore_graylog
+ * @package    logstore_edumessenger
  * @copyright  2016, Binoj David <dbinoj@gmail.com>
  * @author     Binoj David, https://www.dbinoj.com
  * @thanks     2016, Skylar Kelty <S.Kelty@kent.ac.uk>
@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = array(
     array(
-        'classname' => '\logstore_graylog\task\export_task',
+        'classname' => '\logstore_edumessenger\task\export_task',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',

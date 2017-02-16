@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Graylog/GELF log store plugin settings
+ * eduMessenger log store plugin settings
  *
- * @package    logstore_graylog
+ * @package    logstore_edumessenger
  * @copyright  2016, Binoj David <dbinoj@gmail.com>
  * @author     Binoj David, https://www.dbinoj.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,45 +26,94 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
-    $healthurl = new moodle_url('/admin/tool/log/store/graylog/index.php', array('sesskey' => sesskey()));
-    $ADMIN->add('reports', new admin_externalpage(
-        'logstoregrayloghealth',
-        new lang_string('reporttitle', 'logstore_graylog'),
-        $healthurl,
-        'moodle/site:config'
-    ));
+	$healthurl = new moodle_url('/admin/tool/log/store/edumessenger/index.php', array('sesskey' => sesskey()));
+	$ADMIN->add('reports', new admin_externalpage(
+		'logstoreedumessengerhealth',
+		new lang_string('reporttitle', 'logstore_edumessenger'),
+		$healthurl,
+		'moodle/site:config'
+	));
 
+	$settings->add(new admin_setting_configtext(
+		'logstore_edumessenger/serverurl',
+		'eduMessenger Server Adresse',
+		'', 'https://messenger.dibig.at/services/messenger.php', PARAM_URL
+	));
+
+	$settings->add(new admin_setting_configpasswordunmask(
+		'logstore_edumessenger/admintoken',
+		'Admin-Tokens für den eduMessenger Webservice',
+		'', ''
+	));
+
+	$settings->add(new admin_setting_configtext(
+		'logstore_edumessenger/logofile',
+		'Logo',
+		'', '', PARAM_TEXT
+	));
+
+	$settings->add(new admin_setting_configcheckbox(
+		'logstore_edumessenger/allow_registration',
+		'Erlaube Registrierung neuer Konten',
+		'', 1
+	));
+	$settings->add(new admin_setting_configcheckbox(
+		'logstore_edumessenger/allow_course_creation',
+		'Erlaube Verwaltung von Kursen / Gruppen',
+		'', 1
+	));
+
+	$settings->add(new admin_settings_coursecat_select(
+		'logstore_edumessenger/base_category',
+		'Kursbereich für eduMessenger-Gruppen',
+		'', 1
+	));
+
+	$settings->add(new admin_setting_configtext(
+		'logstore_edumessenger/base_course',
+		'Vorlagekurs für eduMessenger-Gruppen',
+		'', '', PARAM_INT
+	));
+
+	$settings->add(new admin_setting_configtext(
+		'logstore_edumessenger/etherpadurl',
+		'Etherpad Url',
+		'', '', PARAM_URL
+	));
+
+	/*
     $settings->add(new admin_setting_configtext(
-        'logstore_graylog/hostname',
-        new lang_string('hostname', 'logstore_graylog'),
+        'logstore_edumessenger/hostname',
+        new lang_string('hostname', 'logstore_edumessenger'),
         '', 'localhost', PARAM_HOST
     ));
 
     $settings->add(new admin_setting_configtext(
-        'logstore_graylog/port',
-        new lang_string('port', 'logstore_graylog'),
+        'logstore_edumessenger/port',
+        new lang_string('port', 'logstore_edumessenger'),
         '', '12201', PARAM_INT
     ));
 
     $settings->add(new admin_setting_configselect(
-        'logstore_graylog/transport',
-        new lang_string('transport', 'logstore_graylog'),
+        'logstore_edumessenger/transport',
+        new lang_string('transport', 'logstore_edumessenger'),
         '', 'udp', array(
-        'udp' => new lang_string('udp', 'logstore_graylog'),
-        'tcp' => new lang_string('tcp', 'logstore_graylog')
+        'udp' => new lang_string('udp', 'logstore_edumessenger'),
+        'tcp' => new lang_string('tcp', 'logstore_edumessenger')
     )));
+	*/
 
-    $settings->add(new admin_setting_configtext(
-        'logstore_graylog/tcptimeout',
-        new lang_string('tcptimeout', 'logstore_graylog'),
-        new lang_string('tcptimeout_desc', 'logstore_graylog'), '30', PARAM_INT
-    ));
+	$settings->add(new admin_setting_configtext(
+		'logstore_edumessenger/tcptimeout',
+		new lang_string('tcptimeout', 'logstore_edumessenger'),
+		new lang_string('tcptimeout_desc', 'logstore_edumessenger'), '30', PARAM_INT
+	));
 
-    $settings->add(new admin_setting_configselect(
-        'logstore_graylog/mode',
-        new lang_string('mode', 'logstore_graylog'),
-        '', 'realtime', array(
-        'realtime' => new lang_string('realtime', 'logstore_graylog'),
-        'background' => new lang_string('background', 'logstore_graylog')
-    )));
+	$settings->add(new admin_setting_configselect(
+		'logstore_edumessenger/mode',
+		new lang_string('mode', 'logstore_edumessenger'),
+		'', 'realtime', array(
+		'realtime' => new lang_string('realtime', 'logstore_edumessenger'),
+		'background' => new lang_string('background', 'logstore_edumessenger'),
+	)));
 }

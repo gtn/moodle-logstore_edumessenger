@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Graylog/GELF log store plugin
+ * eduMessenger log store plugin
  *
- * @package    logstore_graylog
+ * @package    logstore_edumessenger
  * @copyright  2016, Binoj David <dbinoj@gmail.com>
  * @author     Binoj David, https://www.dbinoj.com
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,9 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'logstore_graylog';
-$plugin->version = 2016121600;
-$plugin->release = '0.4 (Build: 2016121600)';
+$plugin->component = 'logstore_edumessenger';
+$plugin->version = 2017012700;
+$plugin->release = '0.1.experimental';
 $plugin->requires = 2014051203;
 $plugin->maturity = MATURITY_STABLE;
-
