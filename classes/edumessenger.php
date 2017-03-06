@@ -84,7 +84,7 @@ class edumessenger {
 
 		$md5 = md5(json_encode([
 			$this->config->serverurl,
-			$dataManage
+			$dataManage,
 		]));
 		if ($md5 !== @$this->config->last_manage_call_md5) {
 			$this->addAction($dataManage);
@@ -150,7 +150,7 @@ class edumessenger {
 	public static function log($data) {
 		static::instance()->addAction([
 			'action' => 'event',
-			'event' => $data
+			'event' => $data,
 		]);
 	}
 
@@ -181,44 +181,81 @@ class edumessenger {
 
 		$data->coursename = $DB->get_field('course', 'fullname', ['id' => $data->courseid]);
 
-		if ($data->eventname == '\mod_forum\event\discussion_created') {
+		$eventname = trim($data->eventname, '\\');
+
+		if (in_array($eventname, [
+			\mod_forum\event\discussion_created::class,
+			\mod_forum\event\discussion_updated::class,
+			\mod_forum\event\discussion_deleted::class,
+		])) {
 			require_once $CFG->dirroot.'/mod/forum/externallib.php';
 
 			try {
 				$discussions = \mod_forum_external::get_forum_discussions_paginated($data->other->forumid);
 				foreach ($discussions['discussions'] as $discussion) {
 					if ($discussion->id == $data->objectid) {
-						$data->other = (object)((array)$data->other + (array)$discussion);
+						$data->other->discussion = $discussion;
 						break;
 					}
 				}
 			} catch (\Exception $e) {
-				return;
 			}
 
-			//$data->other->developer_infos = 'forumid bezieht sich auf die moodle forum aktivität und nicht auf den beitrag im forum discussionid = objectid';
-			$data->other->forumname = $DB->get_field('forum', 'name', ['id' => $data->other->forumid]);
-			// $data->other->discussionid = $data->objectid;
-			// $data->other->discussionname = $DB->get_field('forum_discussions', 'name', ['id' => $data->objectid]);
-		} elseif ($data->eventname == '\mod_forum\event\post_created') {
+			$data->other->forum = $DB->get_record('forum', ['id' => $data->other->forumid]);
+		} elseif (in_array($eventname, [
+			\mod_forum\event\post_created::class,
+			\mod_forum\event\post_updated::class,
+			\mod_forum\event\post_deleted::class,
+		])) {
 			require_once $CFG->dirroot.'/mod/forum/externallib.php';
 
 			try {
 				$posts = \mod_forum_external::get_forum_discussion_posts($data->objectid);
 				foreach ($posts['posts'] as $post) {
 					if ($post->id == $data->objectid) {
-						$data->other = (object)((array)$data->other + (array)$post);
+						$data->other->post = $post;
 						break;
 					}
 				}
 			} catch (\Exception $e) {
-				return;
 			}
 
-			$data->other->forumname = $DB->get_field('forum', 'name', ['id' => $data->other->forumid]);
-			$data->other->discussionname = $DB->get_field('forum_discussions', 'name', ['id' => $data->other->discussionid]);
+			$data->other->forum = $DB->get_record('forum', ['id' => $data->other->forumid]);
+			$data->other->discussion = $DB->get_record('forum_discussions', ['id' => $data->other->discussionid]);
+		} elseif (in_array($eventname, [
+			\core\event\group_created::class,
+			\core\event\group_updated::class,
+			\core\event\group_deleted::class,
+
+		])) {
+			$data->other->group = $DB->get_record('groups', ['id' => $data->objectid]);
+		} elseif (in_array($eventname, [
+			\core\event\group_member_added::class,
+			\core\event\group_member_removed::class,
+		])) {
+			$data->other->user = $DB->get_record('user', ['id' => $data->relateduserid]);
+			unset($data->other->user->password);
+			$data->other->group = $DB->get_record('groups', ['id' => $data->objectid]);
+		} elseif (in_array($eventname, [
+			\core\event\role_assigned::class,
+			\core\event\role_unassigned::class,
+			\core\event\role_deleted::class,
+
+			\core\event\course_created::class,
+			\core\event\course_updated::class,
+			\core\event\course_deleted::class,
+
+			\core\event\message_sent::class,
+		])) {
+			// nothing to add here
 		} else {
-			// echo $data->eventname;
+			/*
+			echo '<pre>';
+			echo $eventname;
+			var_dump($data);
+			exit;
+			/* */
+
 			return;
 		}
 

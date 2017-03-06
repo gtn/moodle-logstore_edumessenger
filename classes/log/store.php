@@ -38,7 +38,13 @@ class store implements \tool_log\log\writer {
      * @throws \coding_exception
      */
     public function __construct(\tool_log\log\manager $manager) {
+		global $CFG;
         $this->helper_setup($manager);
+
+		if ($CFG->debugdeveloper) {
+			// always handle events immediatly
+			$this->buffersize = 0;
+		}
     }
     /**
      * Should the event be ignored (== not logged)?
