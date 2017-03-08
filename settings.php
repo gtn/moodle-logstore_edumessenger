@@ -78,7 +78,7 @@ if ($hassiteconfig) {
 	$settings->add(new admin_setting_configtext(
 		'logstore_edumessenger/etherpadurl',
 		'Etherpad Url',
-		'', '', PARAM_URL
+		'', 'https://etherpad.net/p/', PARAM_URL
 	));
 
 	/*
