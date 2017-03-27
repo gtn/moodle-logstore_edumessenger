@@ -28,6 +28,8 @@ namespace logstore_edumessenger;
 
 defined('MOODLE_INTERNAL') || die();
 
+require __DIR__.'/../inc.php';
+
 /**
  * eduMessenger interface.
  */
@@ -65,6 +67,7 @@ class edumessenger {
 			'actions' => [],
 		];
 
+		$logo = logstore_edumessenger_get_logo();
 
 		$dataManage = [
 			'action' => 'manage',
@@ -74,7 +77,7 @@ class edumessenger {
 			'title' => $DB->get_record('course', ['id' => 1])->fullname,
 			'contact' => $CFG->supportemail,
 			'etherpadurl' => $this->config->etherpadurl,
-			'logo' => $this->config->logofile,
+			'logo' => $logo ? $logo->get_contenthash() : null,
 			'description' => '[Beschreibung]',
 			'allow_registration' => $this->config->allow_registration,
 			'allow_course_creation' => $this->config->allow_course_creation,
@@ -83,15 +86,21 @@ class edumessenger {
 		];
 
 		$md5 = md5(json_encode([
+			'v0000003',
 			$this->config->serverurl,
 			$dataManage,
 		]));
-		if ($md5 !== @$this->config->last_manage_call_md5) {
-			$this->addAction($dataManage);
-			set_config('last_manage_call_md5', $md5, 'logstore_edumessenger');
+
+		if ($md5 === @$this->config->last_manage_call_md5) {
+			return true;
 		}
 
-		// testing
+		// logo mit richtigem inhalt ersetzen
+		$dataManage['logo'] = $logo ? base64_encode($logo->get_content()) : null;
+
+		$this->addAction($dataManage);
+		set_config('last_manage_call_md5', $md5, 'logstore_edumessenger');
+
 		return true;
 	}
 

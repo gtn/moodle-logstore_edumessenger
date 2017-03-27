@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require __DIR__.'/inc.php';
+
 if ($hassiteconfig) {
 	$healthurl = new moodle_url('/admin/tool/log/store/edumessenger/index.php', array('sesskey' => sesskey()));
 	$ADMIN->add('reports', new admin_externalpage(
@@ -116,4 +118,24 @@ if ($hassiteconfig) {
 		'realtime' => new lang_string('realtime', 'logstore_edumessenger'),
 		'background' => new lang_string('background', 'logstore_edumessenger'),
 	)));
+
+	if ($logo = logstore_edumessenger_get_logo_url()) {
+		$logo = '<img style="max-width: 400px" src="'.$logo.'" />';
+	}
+
+	$fileurl = new moodle_url('/admin/tool/log/store/edumessenger/logo.php');
+	$settings->add(new admin_setting_heading(
+		'logstore_edumessenger/file',
+		'',
+		'<div class="form-item clearfix">
+			  <div class="form-label">
+				<label>Logo Upload</label>
+			  </div>
+			  <div class="form-setting">
+			    '.$logo.'
+			    <div style="margin-top: 5px;"><a href="'.$fileurl.'">Logo Upload</a></div>
+			  </div>
+			  <div class="form-description"></div>
+			</div>'
+	));
 }
